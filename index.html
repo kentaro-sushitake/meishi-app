@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>名刺管理 - 飲食店向け</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="名刺管理">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --primary-light: #818cf8;
+      --accent: #f59e0b;
+      --bg: #0f0f1a;
+      --bg2: #1a1a2e;
+      --bg3: #252540;
+      --card: #1e1e35;
+      --border: #2d2d4a;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary-light), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header-btn {
+      background: none;
+      border: none;
+      color: var(--text2);
+      cursor: pointer;
+      font-size: 22px;
+      padding: 4px;
+      border-radius: 8px;
+      transition: color 0.2s;
+    }
+    .header-btn:hover { color: var(--text); }
+
+    /* ===== BOTTOM NAV ===== */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 50;
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0 14px;
+      cursor: pointer;
+      color: var(--text2);
+      font-size: 10px;
+      gap: 3px;
+      border: none;
+      background: none;
+      transition: color 0.2s;
+    }
+    .nav-item.active { color: var(--primary-light); }
+    .nav-icon { font-size: 22px; }
+    .nav-scan {
+      background: var(--primary);
+      border-radius: 50%;
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: -18px;
+      font-size: 24px;
+      color: white;
+      box-shadow: 0 4px 16px rgba(79,70,229,0.5);
+    }
+
+    /* ===== VIEWS ===== */
+    .view { display: none; padding: 16px 16px 90px; }
+    .view.active { display: block; }
+
+    /* ===== CARDS ===== */
+    .contact-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.1s;
+    }
+    .contact-card:active { transform: scale(0.98); }
+    .contact-card:hover { border-color: var(--primary-light); }
+    .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .card-info { flex: 1; min-width: 0; }
+    .card-name { font-weight: 600; font-size: 15px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-sub { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-arrow { color: var(--text2); font-size: 16px; }
+
+    /* ===== SEARCH ===== */
+    .search-wrap {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .search-wrap input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 10px 12px 10px 36px;
+      font-size: 14px;
+      outline: none;
+    }
+    .search-wrap input:focus { border-color: var(--primary-light); }
+    .search-icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text2);
+      font-size: 16px;
+    }
+
+    /* ===== SCAN VIEW ===== */
+    #scanView {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 100;
+      flex-direction: column;
+    }
+    #scanView.active { display: flex; }
+    #cameraStream {
+      width: 100%;
+      flex: 1;
+      object-fit: cover;
+    }
+    .scan-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .scan-frame {
+      width: 85%;
+      aspect-ratio: 1.75;
+      border: 2px solid rgba(255,255,255,0.7);
+      border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+    }
+    .scan-hint {
+      color: rgba(255,255,255,0.8);
+      font-size: 13px;
+      margin-top: 14px;
+      text-align: center;
+    }
+    .scan-controls {
+      background: rgba(0,0,0,0.8);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+    }
+    .scan-btn-close {
+      color: white;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: 50%;
+      width: 46px;
+      height: 46px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .scan-btn-capture {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: white;
+      border: 4px solid rgba(255,255,255,0.4);
+      cursor: pointer;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.2);
+      transition: transform 0.1s;
+    }
+    .scan-btn-capture:active { transform: scale(0.93); }
+    .scan-btn-gallery {
+      color: white;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: 50%;
+      width: 46px;
+      height: 46px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    #fileInput { display: none; }
+
+    /* ===== PROCESSING OVERLAY ===== */
+    #processingOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    #processingOverlay.active { display: flex; }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary-light);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .processing-text { color: var(--text); font-size: 15px; }
+
+    /* ===== EDIT / DETAIL VIEW ===== */
+    #editView {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 90;
+      overflow-y: auto;
+      padding-bottom: 30px;
+    }
+    #editView.active { display: block; }
+    .edit-header {
+      position: sticky;
+      top: 0;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 10;
+    }
+    .edit-header h2 { font-size: 17px; font-weight: 600; flex: 1; }
+    .btn-back {
+      background: none;
+      border: none;
+      color: var(--text2);
+      cursor: pointer;
+      font-size: 22px;
+    }
+    .card-image-preview {
+      width: 100%;
+      aspect-ratio: 1.75;
+      object-fit: cover;
+      background: var(--bg3);
+    }
+    .form-section {
+      padding: 16px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text2);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      margin-top: 20px;
+    }
+    .section-title:first-child { margin-top: 0; }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      color: var(--text2);
+      margin-bottom: 4px;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus { border-color: var(--primary-light); }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .meeting-url-row {
+      display: flex;
+      gap: 8px;
+    }
+    .meeting-url-row input { flex: 1; }
+    .btn-add-url {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--primary-light);
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .url-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .url-chip a { color: var(--primary-light); text-decoration: none; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .url-chip-del { background: none; border: none; color: var(--error); cursor: pointer; font-size: 16px; flex-shrink: 0; }
+
+    /* ===== SAVE BUTTONS ===== */
+    .save-bar {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      gap: 10px;
+    }
+    .btn-primary {
+      flex: 1;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary {
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* ===== SETTINGS VIEW ===== */
+    .settings-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .settings-row {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row label { font-size: 13px; color: var(--text2); white-space: nowrap; }
+    .settings-row input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 7px 10px;
+      font-size: 13px;
+      outline: none;
+      min-width: 0;
+    }
+    .settings-row input:focus { border-color: var(--primary-light); }
+    .settings-label-only { font-size: 14px; color: var(--text); flex: 1; }
+    .settings-value { font-size: 12px; color: var(--text2); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--error);
+      flex-shrink: 0;
+    }
+    .status-dot.ok { background: var(--success); }
+    .btn-connect {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-disconnect {
+      background: var(--bg3);
+      color: var(--error);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* ===== TOAST ===== */
+    #toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--bg3);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 500;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    #toast.success { border-color: var(--success); color: var(--success); }
+    #toast.error { border-color: var(--error); color: var(--error); }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text2);
+    }
+    .empty-state .emoji { font-size: 56px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; line-height: 1.6; }
+
+    /* ===== BADGE ===== */
+    .tag {
+      display: inline-block;
+      background: rgba(79,70,229,0.2);
+      color: var(--primary-light);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    /* ===== DETAIL ACTIONS ===== */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .action-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text2);
+      transition: border-color 0.2s;
+      text-decoration: none;
+    }
+    .action-btn:hover { border-color: var(--primary-light); color: var(--text); }
+    .action-btn .icon { font-size: 24px; }
+
+    /* ===== SETUP BANNER ===== */
+    .setup-banner {
+      background: linear-gradient(135deg, rgba(79,70,229,0.2), rgba(245,158,11,0.1));
+      border: 1px solid rgba(79,70,229,0.4);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .setup-banner .icon { font-size: 22px; flex-shrink: 0; }
+    .setup-banner-text { flex: 1; }
+    .setup-banner-text h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .setup-banner-text p { font-size: 12px; color: var(--text2); line-height: 1.5; }
+    .btn-setup-link {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--primary-light);
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: underline;
+      background: none;
+      border: none;
+    }
+    canvas { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <h1>🍽️ 名刺管理</h1>
+  <button class="header-btn" onclick="showView('settings')" title="設定">⚙️</button>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast"></div>
+
+<!-- ===== CANVAS (hidden, for capture) ===== -->
+<canvas id="canvas"></canvas>
+<input type="file" id="fileInput" accept="image/*" capture="environment">
+
+<!-- ===== PROCESSING OVERLAY ===== -->
+<div id="processingOverlay">
+  <div class="spinner"></div>
+  <div class="processing-text" id="processingText">名刺を読み取り中...</div>
+</div>
+
+<!-- ===== CAMERA SCAN VIEW ===== -->
+<div id="scanView">
+  <video id="cameraStream" autoplay playsinline muted></video>
+  <div class="scan-overlay">
+    <div class="scan-frame"></div>
+    <div class="scan-hint">名刺をフレーム内に収めてください</div>
+  </div>
+  <div class="scan-controls">
+    <button class="scan-btn-close" onclick="closeCamera()">✕</button>
+    <button class="scan-btn-capture" onclick="capturePhoto()" title="撮影"></button>
+    <button class="scan-btn-gallery" onclick="document.getElementById('fileInput').click()">🖼️</button>
+  </div>
+</div>
+
+<!-- ===== EDIT / DETAIL VIEW ===== -->
+<div id="editView">
+  <div class="edit-header">
+    <button class="btn-back" onclick="closeEditView()">←</button>
+    <h2 id="editTitle">名刺を登録</h2>
+    <button class="header-btn" id="editDeleteBtn" onclick="deleteCurrentContact()" style="display:none;">🗑️</button>
+  </div>
+  <img id="cardImagePreview" class="card-image-preview" style="display:none;" alt="名刺画像">
+  <div class="form-section">
+    <div class="section-title">基本情報</div>
+    <div class="form-group"><label>お名前 *</label><input id="f_name" type="text" placeholder="山田 太郎"></div>
+    <div class="form-group"><label>読み仮名</label><input id="f_yomi" type="text" placeholder="やまだ たろう"></div>
+    <div class="form-group"><label>会社・店舗名</label><input id="f_company" type="text" placeholder="株式会社〇〇"></div>
+    <div class="form-group"><label>部署・役職</label><input id="f_title" type="text" placeholder="代表取締役 / 仕入れ担当"></div>
+
+    <div class="section-title">連絡先</div>
+    <div class="form-group"><label>メールアドレス</label><input id="f_email" type="email" placeholder="taro@example.com"></div>
+    <div class="form-group"><label>電話番号</label><input id="f_phone" type="tel" placeholder="03-1234-5678"></div>
+    <div class="form-group"><label>携帯電話</label><input id="f_mobile" type="tel" placeholder="090-1234-5678"></div>
+    <div class="form-group"><label>会社URL / SNS</label><input id="f_url" type="url" placeholder="https://"></div>
+
+    <div class="section-title">住所</div>
+    <div class="form-group"><label>住所</label><input id="f_address" type="text" placeholder="東京都渋谷区〇〇1-2-3"></div>
+
+    <div class="section-title">メモ・管理情報</div>
+    <div class="form-group"><label>カテゴリ（取引先タイプ）</label><input id="f_category" type="text" placeholder="食材仕入れ先 / 顧客 / メディア など"></div>
+    <div class="form-group"><label>メモ</label><textarea id="f_memo" placeholder="初回面談の内容、特記事項など..."></textarea></div>
+
+    <div class="section-title">議事録・関連リンク</div>
+    <div id="urlList"></div>
+    <div class="meeting-url-row">
+      <input id="newUrlInput" type="url" placeholder="https://docs.google.com/...">
+      <button class="btn-add-url" onclick="addMeetingUrl()">＋</button>
+    </div>
+    <div style="margin-top:6px; font-size:11px; color:var(--text2);">Google DocsやNotionの議事録URLを追加できます</div>
+
+    <div class="section-title">アクション</div>
+    <div class="action-grid" id="actionGrid"></div>
+  </div>
+  <div class="save-bar">
+    <button class="btn-secondary" onclick="closeEditView()">キャンセル</button>
+    <button class="btn-primary" onclick="saveContact()">💾 保存する</button>
+  </div>
+</div>
+
+<!-- ===== MAIN VIEWS ===== -->
+
+<!-- Contacts List View -->
+<div class="view active" id="listView">
+  <div id="setupBanner" class="setup-banner" style="display:none;">
+    <span class="icon">⚠️</span>
+    <div class="setup-banner-text">
+      <h4>初期設定が必要です</h4>
+      <p>Google APIの設定を行うと、名刺OCR・Google Contacts連携・Sheetsへの自動保存が使えます。</p>
+      <button class="btn-setup-link" onclick="showView('settings')">設定画面を開く →</button>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="名前・会社名で検索..." oninput="renderList()">
+  </div>
+  <div id="contactList"></div>
+</div>
+
+<!-- Settings View -->
+<div class="view" id="settingsView">
+  <div style="margin-bottom:16px;">
+    <div style="font-size:20px; font-weight:700; margin-bottom:4px;">⚙️ 設定</div>
+    <div style="font-size:12px; color:var(--text2);">Google Workspace連携の設定をします</div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-row">
+      <label>Google サインイン</label>
+      <div id="authStatus" class="status-dot"></div>
+      <div id="authStatusText" class="settings-value">未接続</div>
+      <button id="authBtn" class="btn-connect" onclick="handleAuthBtn()">接続</button>
+    </div>
+    <div class="settings-row" id="authUserRow" style="display:none;">
+      <span class="settings-label-only" id="authUserName">-</span>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div style="padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text2);">Google Cloud API キー</div>
+    <div class="settings-row">
+      <label>Vision API キー</label>
+      <input type="password" id="cfg_visionKey" placeholder="AIza..." oninput="saveCfg()">
+    </div>
+    <div class="settings-row">
+      <label>OAuth クライアントID</label>
+      <input type="text" id="cfg_clientId" placeholder="xxx.apps.googleusercontent.com" oninput="saveCfg()">
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div style="padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text2);">Google Sheets（データ保存）</div>
+    <div class="settings-row">
+      <label>スプレッドシートID</label>
+      <input type="text" id="cfg_sheetId" placeholder="1BxiMVs0..." oninput="saveCfg()">
+    </div>
+    <div class="settings-row">
+      <span class="settings-label-only" style="font-size:12px; color:var(--text2);">※ URLの /d/ 〜 /edit の間の文字列</span>
+    </div>
+    <div class="settings-row" style="justify-content:center;">
+      <button class="btn-connect" onclick="initSheet()" style="width:100%;">Sheetsを初期化・確認</button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div style="padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text2);">Google Contacts</div>
+    <div class="settings-row">
+      <div id="contactsStatus" class="status-dot"></div>
+      <span class="settings-label-only">自動連絡先追加</span>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="cfg_autoContacts" onchange="saveCfg()">
+        <span style="font-size:13px;">有効</span>
+      </label>
+    </div>
+  </div>
+
+  <div style="padding:12px 0; font-size:12px; color:var(--text2); line-height:1.7;">
+    <strong>設定手順：</strong><br>
+    1. <a href="https://console.cloud.google.com/" target="_blank" style="color:var(--primary-light);">Google Cloud Console</a> でプロジェクト作成<br>
+    2. Cloud Vision API・Sheets API・People API を有効化<br>
+    3. 認証情報 → APIキー（Vision用）を作成<br>
+    4. OAuth 2.0 クライアントIDを作成（Webアプリ）<br>
+    5. スプレッドシートを新規作成してIDをコピー<br>
+    詳しくは同梱の <strong>SETUP.md</strong> を参照してください
+  </div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav">
+  <button class="nav-item active" id="nav-list" onclick="showView('list')">
+    <span class="nav-icon">👥</span>
+    <span>連絡先</span>
+  </button>
+  <button class="nav-item" onclick="openCamera()" style="flex:1.3;">
+    <div class="nav-scan">📷</div>
+    <span style="font-size:10px; margin-top:4px; color:var(--text2);">スキャン</span>
+  </button>
+  <button class="nav-item" id="nav-settings" onclick="showView('settings')">
+    <span class="nav-icon">⚙️</span>
+    <span>設定</span>
+  </button>
+</nav>
+
+<script>
+// =====================================================
+// STATE & CONFIG
+// =====================================================
+let contacts = JSON.parse(localStorage.getItem('meishi_contacts') || '[]');
+let currentContactId = null;
+let meetingUrls = [];
+let capturedImageData = null;
+let cameraStream = null;
+let googleAccessToken = null;
+
+const cfg = {
+  get visionKey() { return localStorage.getItem('cfg_visionKey') || ''; },
+  get clientId()  { return localStorage.getItem('cfg_clientId') || ''; },
+  get sheetId()   { return localStorage.getItem('cfg_sheetId') || ''; },
+  get autoContacts() { return localStorage.getItem('cfg_autoContacts') === 'true'; },
+};
+
+// =====================================================
+// INIT
+// =====================================================
+document.addEventListener('DOMContentLoaded', () => {
+  loadCfgToUI();
+  renderList();
+  checkSetup();
+
+  // Google Identity Services callback
+  window.handleCredentialResponse = (response) => {
+    // Parse JWT to get user info
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    googleAccessToken = response.credential;
+    document.getElementById('authUserName').textContent = `${payload.name}（${payload.email}）`;
+    document.getElementById('authUserRow').style.display = 'flex';
+    document.getElementById('authStatus').classList.add('ok');
+    document.getElementById('authStatusText').textContent = '接続済み';
+    document.getElementById('authBtn').textContent = '切断';
+    document.getElementById('authBtn').className = 'btn-disconnect';
+    document.getElementById('contactsStatus').classList.add('ok');
+    localStorage.setItem('g_token', response.credential);
+    showToast('✅ Google アカウントに接続しました', 'success');
+  };
+
+  // Restore token
+  const saved = localStorage.getItem('g_token');
+  if (saved) {
+    try {
+      const payload = JSON.parse(atob(saved.split('.')[1]));
+      const exp = payload.exp * 1000;
+      if (Date.now() < exp) {
+        googleAccessToken = saved;
+        document.getElementById('authUserName').textContent = `${payload.name}（${payload.email}）`;
+        document.getElementById('authUserRow').style.display = 'flex';
+        document.getElementById('authStatus').classList.add('ok');
+        document.getElementById('authStatusText').textContent = '接続済み';
+        document.getElementById('authBtn').textContent = '切断';
+        document.getElementById('authBtn').className = 'btn-disconnect';
+        document.getElementById('contactsStatus').classList.add('ok');
+      }
+    } catch(e) {}
+  }
+
+  // File input (gallery)
+  document.getElementById('fileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      capturedImageData = ev.target.result;
+      closeCamera();
+      processImage(capturedImageData);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+});
+
+// =====================================================
+// CONFIG UI
+// =====================================================
+function loadCfgToUI() {
+  document.getElementById('cfg_visionKey').value = localStorage.getItem('cfg_visionKey') || '';
+  document.getElementById('cfg_clientId').value = localStorage.getItem('cfg_clientId') || '';
+  document.getElementById('cfg_sheetId').value = localStorage.getItem('cfg_sheetId') || '';
+  document.getElementById('cfg_autoContacts').checked = cfg.autoContacts;
+}
+
+function saveCfg() {
+  localStorage.setItem('cfg_visionKey', document.getElementById('cfg_visionKey').value.trim());
+  localStorage.setItem('cfg_clientId', document.getElementById('cfg_clientId').value.trim());
+  localStorage.setItem('cfg_sheetId', document.getElementById('cfg_sheetId').value.trim());
+  localStorage.setItem('cfg_autoContacts', document.getElementById('cfg_autoContacts').checked);
+  checkSetup();
+}
+
+function checkSetup() {
+  const needsSetup = !cfg.visionKey || !cfg.clientId;
+  document.getElementById('setupBanner').style.display = needsSetup ? 'flex' : 'none';
+}
+
+// =====================================================
+// AUTH
+// =====================================================
+function handleAuthBtn() {
+  if (googleAccessToken) {
+    // Disconnect
+    googleAccessToken = null;
+    localStorage.removeItem('g_token');
+    document.getElementById('authUserRow').style.display = 'none';
+    document.getElementById('authStatus').classList.remove('ok');
+    document.getElementById('authStatusText').textContent = '未接続';
+    document.getElementById('authBtn').textContent = '接続';
+    document.getElementById('authBtn').className = 'btn-connect';
+    document.getElementById('contactsStatus').classList.remove('ok');
+    showToast('Google アカウントを切断しました');
+  } else {
+    // Connect via Google Sign-In
+    if (!cfg.clientId) {
+      showToast('⚠️ 先にOAuthクライアントIDを設定してください', 'error');
+      return;
+    }
+    // Load GIS and prompt sign-in
+    initGoogleAuth();
+  }
+}
+
+function initGoogleAuth() {
+  if (typeof google === 'undefined') {
+    showToast('⚠️ Google認証ライブラリ読み込み中...', 'error');
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: cfg.clientId,
+    callback: handleCredentialResponse,
+    auto_select: false,
+    cancel_on_tap_outside: true,
+  });
+  google.accounts.id.prompt();
+}
+
+// =====================================================
+// CAMERA
+// =====================================================
+async function openCamera() {
+  if (!cfg.visionKey) {
+    showToast('⚠️ Vision API キーを設定してください', 'error');
+    showView('settings');
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+    });
+    cameraStream = stream;
+    document.getElementById('cameraStream').srcObject = stream;
+    document.getElementById('scanView').classList.add('active');
+  } catch (err) {
+    // Fallback to file picker
+    document.getElementById('fileInput').click();
+  }
+}
+
+function closeCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  document.getElementById('scanView').classList.remove('active');
+}
+
+function capturePhoto() {
+  const video = document.getElementById('cameraStream');
+  const canvas = document.getElementById('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  capturedImageData = canvas.toDataURL('image/jpeg', 0.9);
+  closeCamera();
+  processImage(capturedImageData);
+}
+
+// =====================================================
+// OCR - Google Cloud Vision
+// =====================================================
+async function processImage(dataUrl) {
+  showProcessing('名刺を読み取り中...');
+  try {
+    const base64 = dataUrl.split(',')[1];
+    const result = await callVisionAPI(base64);
+    const text = result?.responses?.[0]?.textAnnotations?.[0]?.description || '';
+    const parsed = parseBusinessCard(text);
+    parsed.imageData = dataUrl;
+    openEditView(null, parsed);
+  } catch (err) {
+    showToast('❌ OCR失敗: ' + err.message, 'error');
+    // Still open edit view with empty fields
+    openEditView(null, { imageData: dataUrl });
+  } finally {
+    hideProcessing();
+  }
+}
+
+async function callVisionAPI(base64Image) {
+  const resp = await fetch(
+    `https://vision.googleapis.com/v1/images:annotate?key=${cfg.visionKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{
+          image: { content: base64Image },
+          features: [{ type: 'TEXT_DETECTION', maxResults: 1 }],
+          imageContext: { languageHints: ['ja', 'en'] }
+        }]
+      })
+    }
+  );
+  if (!resp.ok) throw new Error(`Vision API error: ${resp.status}`);
+  return resp.json();
+}
+
+// =====================================================
+// PARSE OCR TEXT → STRUCTURED DATA
+// =====================================================
+function parseBusinessCard(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const data = {};
+
+  // Email
+  const emailM = text.match(/[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}/);
+  if (emailM) data.email = emailM[0];
+
+  // Phone (Japanese patterns)
+  const phones = [...text.matchAll(/(?:TEL|Tel|tel|電話|携帯|Mobile|FAX|Fax)?[：:\s]?\(?\d{2,4}\)?[-\s]?\d{3,4}[-\s]?\d{4}/g)].map(m => m[0].trim());
+  const cleaned = phones.map(p => p.replace(/^(TEL|Tel|tel|電話|携帯|Mobile|FAX|Fax)[：:\s]*/i, '').trim());
+  if (cleaned[0]) data.phone = cleaned[0];
+  if (cleaned[1]) data.mobile = cleaned[1];
+
+  // URL
+  const urlM = text.match(/https?:\/\/[^\s\n]+/);
+  if (urlM) data.url = urlM[0];
+
+  // Address (contains 都/道/府/県 or 〒)
+  const addressM = text.match(/〒?\d{3}-?\d{4}[^\n]*|(?:東京|大阪|京都|北海道|神奈川|愛知|福岡|埼玉|千葉|兵庫)[^\n]{5,50}/);
+  if (addressM) data.address = addressM[0].trim();
+
+  // Name heuristic: find lines that look like Japanese names or are short
+  const usedLines = new Set();
+  if (data.email) usedLines.add(data.email);
+  if (data.phone) usedLines.add(data.phone);
+  if (data.url) usedLines.add(data.url);
+
+  // Company: look for 株式会社/有限会社/合同会社/Co.,Ltd
+  const companyM = text.match(/(?:株式会社|有限会社|合同会社|一般社団法人|NPO法人)[^\n\s]{1,20}|[^\n\s]{2,20}(?:株式会社|有限会社|合同会社|Co\.,?\s*Ltd\.?|Inc\.?|LLC)/i);
+  if (companyM) data.company = companyM[0].trim();
+
+  // Title: common keywords
+  const titleM = text.match(/(?:代表取締役|取締役|部長|課長|係長|マネージャー|Manager|Director|CEO|COO|CFO|CTO|Chief|代表|社長|副社長|専務|常務|担当|営業|仕入れ|料理長|シェフ|店長|オーナー)[^\n]{0,20}/);
+  if (titleM) data.title = titleM[0].trim();
+
+  // Name: remaining short lines that aren't matched above
+  for (const line of lines) {
+    if (data.name) break;
+    const l = line.replace(/\s/g, '');
+    if (l.length < 2 || l.length > 12) continue;
+    if (/[@\d\/\\]/.test(l)) continue;
+    if (data.company && data.company.includes(l)) continue;
+    if (data.title && data.title.includes(l)) continue;
+    // Likely a name if it's short and Japanese or mixed
+    if (/^[぀-鿿゠-ヿ\w\s]+$/.test(line) && line.length >= 2 && line.length <= 15) {
+      data.name = line;
+    }
+  }
+
+  return data;
+}
+
+// =====================================================
+// EDIT VIEW
+// =====================================================
+function openEditView(contactId, prefill = {}) {
+  currentContactId = contactId;
+  meetingUrls = [];
+
+  const isNew = !contactId;
+  document.getElementById('editTitle').textContent = isNew ? '名刺を登録' : '連絡先を編集';
+  document.getElementById('editDeleteBtn').style.display = isNew ? 'none' : 'block';
+
+  let data = prefill;
+  if (contactId) {
+    data = contacts.find(c => c.id === contactId) || {};
+    meetingUrls = [...(data.meetingUrls || [])];
+  }
+
+  // Fill form
+  ['name','yomi','company','title','email','phone','mobile','url','address','category','memo'].forEach(k => {
+    const el = document.getElementById('f_' + k);
+    if (el) el.value = data[k] || '';
+  });
+
+  // Image
+  const imgEl = document.getElementById('cardImagePreview');
+  if (data.imageData) {
+    imgEl.src = data.imageData;
+    imgEl.style.display = 'block';
+  } else {
+    imgEl.style.display = 'none';
+  }
+
+  // Action grid (only for existing contacts)
+  renderActionGrid(data);
+
+  // Meeting URLs
+  renderUrlList();
+
+  document.getElementById('editView').classList.add('active');
+}
+
+function closeEditView() {
+  document.getElementById('editView').classList.remove('active');
+  capturedImageData = null;
+  currentContactId = null;
+}
+
+function renderActionGrid(data) {
+  const grid = document.getElementById('actionGrid');
+  if (!data.email && !data.phone && !data.mobile && !data.url) {
+    grid.innerHTML = '';
+    return;
+  }
+  let html = '';
+  if (data.phone) html += `<a class="action-btn" href="tel:${data.phone}"><span class="icon">📞</span>電話</a>`;
+  if (data.mobile) html += `<a class="action-btn" href="tel:${data.mobile}"><span class="icon">📱</span>携帯</a>`;
+  if (data.email) html += `<a class="action-btn" href="mailto:${data.email}"><span class="icon">✉️</span>メール</a>`;
+  if (data.url) html += `<a class="action-btn" href="${data.url}" target="_blank"><span class="icon">🌐</span>ウェブ</a>`;
+  grid.innerHTML = html;
+}
+
+// =====================================================
+// MEETING URLS
+// =====================================================
+function addMeetingUrl() {
+  const input = document.getElementById('newUrlInput');
+  const url = input.value.trim();
+  if (!url) return;
+  if (!url.startsWith('http')) { showToast('有効なURLを入力してください', 'error'); return; }
+  meetingUrls.push(url);
+  input.value = '';
+  renderUrlList();
+}
+
+function removeMeetingUrl(idx) {
+  meetingUrls.splice(idx, 1);
+  renderUrlList();
+}
+
+function renderUrlList() {
+  const list = document.getElementById('urlList');
+  list.innerHTML = meetingUrls.map((u, i) => {
+    const label = u.replace(/^https?:\/\//, '').substring(0, 50);
+    return `<div class="url-chip">
+      <a href="${u}" target="_blank">🔗 ${label}</a>
+      <button class="url-chip-del" onclick="removeMeetingUrl(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// =====================================================
+// SAVE CONTACT
+// =====================================================
+async function saveContact() {
+  const name = document.getElementById('f_name').value.trim();
+  if (!name) { showToast('⚠️ お名前は必須です', 'error'); return; }
+
+  const data = {
+    id: currentContactId || Date.now().toString(),
+    name,
+    yomi:     document.getElementById('f_yomi').value.trim(),
+    company:  document.getElementById('f_company').value.trim(),
+    title:    document.getElementById('f_title').value.trim(),
+    email:    document.getElementById('f_email').value.trim(),
+    phone:    document.getElementById('f_phone').value.trim(),
+    mobile:   document.getElementById('f_mobile').value.trim(),
+    url:      document.getElementById('f_url').value.trim(),
+    address:  document.getElementById('f_address').value.trim(),
+    category: document.getElementById('f_category').value.trim(),
+    memo:     document.getElementById('f_memo').value.trim(),
+    meetingUrls: [...meetingUrls],
+    imageData: capturedImageData || (currentContactId ? (contacts.find(c=>c.id===currentContactId)||{}).imageData : null),
+    updatedAt: new Date().toISOString(),
+    createdAt: currentContactId ? (contacts.find(c=>c.id===currentContactId)||{}).createdAt : new Date().toISOString(),
+  };
+
+  // Update or add
+  const idx = contacts.findIndex(c => c.id === data.id);
+  if (idx >= 0) contacts[idx] = data;
+  else contacts.unshift(data);
+  localStorage.setItem('meishi_contacts', JSON.stringify(contacts));
+
+  // Sync to Google services
+  showProcessing('保存中...');
+  const tasks = [];
+  if (googleAccessToken) {
+    if (cfg.sheetId) tasks.push(syncToSheets(data));
+    if (cfg.autoContacts) tasks.push(syncToContacts(data));
+  }
+  await Promise.allSettled(tasks);
+  hideProcessing();
+
+  closeEditView();
+  renderList();
+  showView('list');
+  showToast('✅ 保存しました', 'success');
+}
+
+// =====================================================
+// DELETE CONTACT
+// =====================================================
+function deleteCurrentContact() {
+  if (!currentContactId) return;
+  if (!confirm('この連絡先を削除しますか？')) return;
+  contacts = contacts.filter(c => c.id !== currentContactId);
+  localStorage.setItem('meishi_contacts', JSON.stringify(contacts));
+  closeEditView();
+  renderList();
+  showToast('削除しました');
+}
+
+// =====================================================
+// RENDER CONTACT LIST
+// =====================================================
+function renderList() {
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const list = document.getElementById('contactList');
+  const filtered = contacts.filter(c =>
+    !q || c.name.toLowerCase().includes(q) ||
+    (c.company || '').toLowerCase().includes(q) ||
+    (c.yomi || '').toLowerCase().includes(q)
+  );
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="emoji">${contacts.length === 0 ? '📇' : '🔍'}</div>
+      <h3>${contacts.length === 0 ? 'まだ名刺がありません' : '該当する連絡先がありません'}</h3>
+      <p>${contacts.length === 0 ? '下の📷ボタンで名刺を\nスキャンしてみましょう' : '別のキーワードで検索してください'}</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(c => `
+    <div class="contact-card" onclick="openEditView('${c.id}')">
+      <div class="avatar">${(c.name[0] || '？')}</div>
+      <div class="card-info">
+        <div class="card-name">${esc(c.name)}${c.category ? `<span class="tag">${esc(c.category)}</span>` : ''}</div>
+        <div class="card-sub">${esc(c.company || '')}${c.title ? ' · ' + esc(c.title) : ''}</div>
+        ${c.meetingUrls?.length ? `<div class="card-sub">📎 議事録 ${c.meetingUrls.length}件</div>` : ''}
+      </div>
+      <span class="card-arrow">›</span>
+    </div>
+  `).join('');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// =====================================================
+// GOOGLE SHEETS SYNC
+// =====================================================
+async function syncToSheets(contact) {
+  try {
+    const token = await getOAuthToken();
+    const row = [
+      contact.id, contact.name, contact.yomi, contact.company, contact.title,
+      contact.email, contact.phone, contact.mobile, contact.url, contact.address,
+      contact.category, contact.memo, contact.meetingUrls.join(' | '),
+      contact.createdAt, contact.updatedAt
+    ];
+    // Append to sheet
+    const resp = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}/values/名刺データ!A:O:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [row] })
+      }
+    );
+    if (!resp.ok) throw new Error(await resp.text());
+  } catch(e) {
+    console.warn('Sheets sync failed:', e);
+  }
+}
+
+async function initSheet() {
+  const token = await getOAuthToken();
+  if (!token) { showToast('⚠️ 先にGoogleにサインインしてください', 'error'); return; }
+  if (!cfg.sheetId) { showToast('⚠️ スプレッドシートIDを入力してください', 'error'); return; }
+  try {
+    showProcessing('Sheets を確認中...');
+    // Check sheet exists
+    const resp = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}`,
+      { headers: { 'Authorization': 'Bearer ' + token } }
+    );
+    if (!resp.ok) throw new Error('スプレッドシートが見つかりません。IDを確認してください。');
+    const meta = await resp.json();
+
+    // Check if sheet named 名刺データ exists
+    const sheetNames = meta.sheets.map(s => s.properties.title);
+    if (!sheetNames.includes('名刺データ')) {
+      // Add sheet
+      await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}:batchUpdate`,
+        {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requests: [{ addSheet: { properties: { title: '名刺データ' } } }] })
+        }
+      );
+      // Write header
+      await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}/values/名刺データ!A1:append?valueInputOption=RAW`,
+        {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ values: [['ID','名前','読み仮名','会社名','役職','メール','電話','携帯','URL','住所','カテゴリ','メモ','議事録URL','登録日','更新日']] })
+        }
+      );
+    }
+    hideProcessing();
+    showToast('✅ Sheets の準備完了！', 'success');
+  } catch(e) {
+    hideProcessing();
+    showToast('❌ ' + e.message, 'error');
+  }
+}
+
+// =====================================================
+// GOOGLE CONTACTS (People API)
+// =====================================================
+async function syncToContacts(contact) {
+  try {
+    const token = await getOAuthToken();
+    const body = {
+      names: [{ givenName: contact.name }],
+      emailAddresses: contact.email ? [{ value: contact.email }] : [],
+      phoneNumbers: [
+        ...(contact.phone ? [{ value: contact.phone, type: 'work' }] : []),
+        ...(contact.mobile ? [{ value: contact.mobile, type: 'mobile' }] : []),
+      ],
+      organizations: contact.company ? [{ name: contact.company, title: contact.title || '' }] : [],
+      addresses: contact.address ? [{ formattedValue: contact.address }] : [],
+      urls: contact.url ? [{ value: contact.url }] : [],
+      biographies: contact.memo ? [{ value: contact.memo }] : [],
+    };
+    const resp = await fetch('https://people.googleapis.com/v1/people:createContact', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+  } catch(e) {
+    console.warn('Contacts sync failed:', e);
+  }
+}
+
+// =====================================================
+// OAUTH TOKEN
+// =====================================================
+async function getOAuthToken() {
+  // For GIS (Google Identity Services), we need an access token via OAuth2
+  // The ID token (credential) can't be used for API calls — we need an access token
+  // We use the tokenClient approach
+  return new Promise((resolve, reject) => {
+    if (!cfg.clientId) { resolve(null); return; }
+    if (typeof google === 'undefined') { resolve(null); return; }
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: cfg.clientId,
+      scope: [
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/contacts',
+      ].join(' '),
+      callback: (tokenResponse) => {
+        if (tokenResponse.error) { reject(new Error(tokenResponse.error)); return; }
+        resolve(tokenResponse.access_token);
+      }
+    });
+    client.requestAccessToken({ prompt: '' });
+  });
+}
+
+// =====================================================
+// VIEW NAVIGATION
+// =====================================================
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (name === 'list') {
+    document.getElementById('listView').classList.add('active');
+    document.getElementById('nav-list').classList.add('active');
+  } else if (name === 'settings') {
+    document.getElementById('settingsView').classList.add('active');
+    document.getElementById('nav-settings').classList.add('active');
+  }
+}
+
+// =====================================================
+// PROCESSING OVERLAY
+// =====================================================
+function showProcessing(text = '処理中...') {
+  document.getElementById('processingText').textContent = text;
+  document.getElementById('processingOverlay').classList.add('active');
+}
+function hideProcessing() {
+  document.getElementById('processingOverlay').classList.remove('active');
+}
+
+// =====================================================
+// TOAST
+// =====================================================
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// =====================================================
+// SERVICE WORKER REGISTRATION
+// =====================================================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(e => console.log('SW:', e));
+}
+</script>
+</body>
+</html>
