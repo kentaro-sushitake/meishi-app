@@ -10,33 +10,41 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="名刺管理">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    // GIS ライブラリ読み込み完了時に呼ばれる
+    function onGoogleLibraryLoad() {
+      if (window._gisReadyCallback) window._gisReadyCallback();
+    }
+  </script>
+  <script src="https://accounts.google.com/gsi/client?onload=onGoogleLibraryLoad" async defer></script>
   <style>
     :root {
-      --primary: #4f46e5;
-      --primary-dark: #3730a3;
-      --primary-light: #818cf8;
-      --accent: #f59e0b;
-      --bg: #0f0f1a;
-      --bg2: #1a1a2e;
-      --bg3: #252540;
-      --card: #1e1e35;
-      --border: #2d2d4a;
-      --text: #e2e8f0;
-      --text2: #94a3b8;
-      --success: #10b981;
-      --error: #ef4444;
-      --warning: #f59e0b;
+      --primary: #1a73e8;
+      --primary-dark: #1557b0;
+      --primary-light: #4a90d9;
+      --accent: #ff5722;
+      --bg: #f5f6f8;
+      --bg2: #ffffff;
+      --bg3: #f0f2f5;
+      --card: #ffffff;
+      --border: #e8eaed;
+      --border2: #dadce0;
+      --text: #202124;
+      --text2: #5f6368;
+      --success: #1e8e3e;
+      --error: #d93025;
+      --warning: #f29900;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', 'Noto Sans JP', sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       max-width: 480px;
       margin: 0 auto;
       position: relative;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* ===== HEADER ===== */
@@ -46,29 +54,35 @@
       z-index: 50;
       background: var(--bg2);
       border-bottom: 1px solid var(--border);
-      padding: 14px 16px;
+      padding: 0 16px;
+      height: 56px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
     .header h1 {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 700;
-      background: linear-gradient(135deg, var(--primary-light), var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text);
+      letter-spacing: -0.3px;
     }
+    .header h1 span { color: var(--primary); }
     .header-btn {
       background: none;
       border: none;
       color: var(--text2);
       cursor: pointer;
-      font-size: 22px;
-      padding: 4px;
-      border-radius: 8px;
-      transition: color 0.2s;
+      font-size: 20px;
+      padding: 6px;
+      border-radius: 50%;
+      transition: background 0.15s;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .header-btn:hover { color: var(--text); }
+    .header-btn:hover { background: var(--bg3); }
 
     /* ===== BOTTOM NAV ===== */
     .bottom-nav {
@@ -88,67 +102,72 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 10px 0 14px;
+      padding: 8px 0 12px;
       cursor: pointer;
       color: var(--text2);
       font-size: 10px;
+      font-weight: 500;
       gap: 3px;
       border: none;
       background: none;
-      transition: color 0.2s;
+      transition: color 0.15s;
     }
-    .nav-item.active { color: var(--primary-light); }
+    .nav-item.active { color: var(--primary); }
     .nav-icon { font-size: 22px; }
     .nav-scan {
-      background: var(--primary);
+      background: var(--accent);
       border-radius: 50%;
-      width: 52px;
-      height: 52px;
+      width: 50px;
+      height: 50px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-top: -18px;
-      font-size: 24px;
+      margin-top: -16px;
+      font-size: 22px;
       color: white;
-      box-shadow: 0 4px 16px rgba(79,70,229,0.5);
+      box-shadow: 0 2px 12px rgba(255,87,34,0.4);
+      transition: box-shadow 0.2s, transform 0.1s;
     }
+    .nav-scan:active { transform: scale(0.95); }
 
     /* ===== VIEWS ===== */
-    .view { display: none; padding: 16px 16px 90px; }
+    .view { display: none; padding: 16px 16px 88px; }
     .view.active { display: block; }
 
     /* ===== CARDS ===== */
     .contact-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 14px 16px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 14px;
       cursor: pointer;
-      transition: border-color 0.2s, transform 0.1s;
+      transition: box-shadow 0.15s, border-color 0.15s, transform 0.1s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
-    .contact-card:active { transform: scale(0.98); }
-    .contact-card:hover { border-color: var(--primary-light); }
+    .contact-card:active { transform: scale(0.985); box-shadow: none; }
+    .contact-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-color: var(--border2); }
     .avatar {
-      width: 46px;
-      height: 46px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      background: var(--primary);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 700;
       color: white;
       flex-shrink: 0;
+      letter-spacing: -0.5px;
     }
     .card-info { flex: 1; min-width: 0; }
-    .card-name { font-weight: 600; font-size: 15px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-sub { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-arrow { color: var(--text2); font-size: 16px; }
+    .card-name { font-weight: 600; font-size: 15px; color: var(--text); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-sub { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
+    .card-arrow { color: var(--border2); font-size: 18px; font-weight: 300; }
 
     /* ===== SEARCH ===== */
     .search-wrap {
@@ -157,22 +176,27 @@
     }
     .search-wrap input {
       width: 100%;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 24px;
       color: var(--text);
-      padding: 10px 12px 10px 36px;
+      padding: 10px 16px 10px 38px;
       font-size: 14px;
       outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
-    .search-wrap input:focus { border-color: var(--primary-light); }
+    .search-wrap input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+    }
     .search-icon {
       position: absolute;
-      left: 11px;
+      left: 13px;
       top: 50%;
       transform: translateY(-50%);
       color: var(--text2);
-      font-size: 16px;
+      font-size: 15px;
     }
 
     /* ===== SCAN VIEW ===== */
@@ -202,19 +226,20 @@
     .scan-frame {
       width: 85%;
       aspect-ratio: 1.75;
-      border: 2px solid rgba(255,255,255,0.7);
-      border-radius: 12px;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+      border: 2px solid rgba(255,255,255,0.8);
+      border-radius: 10px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
     }
     .scan-hint {
-      color: rgba(255,255,255,0.8);
+      color: rgba(255,255,255,0.85);
       font-size: 13px;
-      margin-top: 14px;
+      margin-top: 16px;
       text-align: center;
+      font-weight: 500;
     }
     .scan-controls {
-      background: rgba(0,0,0,0.8);
-      padding: 20px;
+      background: rgba(0,0,0,0.85);
+      padding: 22px;
       display: flex;
       align-items: center;
       justify-content: space-around;
@@ -226,7 +251,7 @@
       border-radius: 50%;
       width: 46px;
       height: 46px;
-      font-size: 20px;
+      font-size: 18px;
       cursor: pointer;
     }
     .scan-btn-capture {
@@ -234,12 +259,12 @@
       height: 68px;
       border-radius: 50%;
       background: white;
-      border: 4px solid rgba(255,255,255,0.4);
+      border: 4px solid rgba(255,255,255,0.35);
       cursor: pointer;
-      box-shadow: 0 0 0 4px rgba(255,255,255,0.2);
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.15);
       transition: transform 0.1s;
     }
-    .scan-btn-capture:active { transform: scale(0.93); }
+    .scan-btn-capture:active { transform: scale(0.92); }
     .scan-btn-gallery {
       color: white;
       background: rgba(255,255,255,0.15);
@@ -257,7 +282,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.8);
+      background: rgba(255,255,255,0.88);
       z-index: 200;
       flex-direction: column;
       align-items: center;
@@ -266,15 +291,15 @@
     }
     #processingOverlay.active { display: flex; }
     .spinner {
-      width: 48px;
-      height: 48px;
-      border: 3px solid var(--border);
-      border-top-color: var(--primary-light);
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border2);
+      border-top-color: var(--primary);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin 0.75s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .processing-text { color: var(--text); font-size: 15px; }
+    .processing-text { color: var(--text2); font-size: 14px; font-weight: 500; }
 
     /* ===== EDIT / DETAIL VIEW ===== */
     #editView {
@@ -292,93 +317,104 @@
       top: 0;
       background: var(--bg2);
       border-bottom: 1px solid var(--border);
-      padding: 14px 16px;
+      padding: 0 16px;
+      height: 56px;
       display: flex;
       align-items: center;
       gap: 12px;
       z-index: 10;
     }
-    .edit-header h2 { font-size: 17px; font-weight: 600; flex: 1; }
+    .edit-header h2 { font-size: 16px; font-weight: 600; flex: 1; color: var(--text); }
     .btn-back {
       background: none;
       border: none;
       color: var(--text2);
       cursor: pointer;
-      font-size: 22px;
+      font-size: 20px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.15s;
     }
+    .btn-back:hover { background: var(--bg3); }
     .card-image-preview {
       width: 100%;
       aspect-ratio: 1.75;
       object-fit: cover;
       background: var(--bg3);
     }
-    .form-section {
-      padding: 16px;
-    }
+    .form-section { padding: 16px; }
     .section-title {
       font-size: 11px;
       font-weight: 600;
-      color: var(--text2);
-      letter-spacing: 0.08em;
+      color: var(--primary);
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       margin-bottom: 10px;
-      margin-top: 20px;
+      margin-top: 24px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--border);
     }
     .section-title:first-child { margin-top: 0; }
-    .form-group {
-      margin-bottom: 10px;
-    }
+    .form-group { margin-bottom: 10px; }
     .form-group label {
       display: block;
       font-size: 11px;
       color: var(--text2);
       margin-bottom: 4px;
+      font-weight: 500;
     }
     .form-group input,
     .form-group textarea {
       width: 100%;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
       color: var(--text);
       padding: 10px 12px;
       font-size: 14px;
       outline: none;
       font-family: inherit;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
     .form-group input:focus,
-    .form-group textarea:focus { border-color: var(--primary-light); }
-    .form-group textarea { resize: vertical; min-height: 80px; }
-    .meeting-url-row {
-      display: flex;
-      gap: 8px;
+    .form-group textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
     }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .meeting-url-row { display: flex; gap: 8px; }
     .meeting-url-row input { flex: 1; }
     .btn-add-url {
       background: var(--bg3);
-      border: 1px solid var(--border);
-      color: var(--primary-light);
-      padding: 10px 12px;
-      border-radius: 10px;
+      border: 1px solid var(--border2);
+      color: var(--primary);
+      padding: 10px 14px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 20px;
       line-height: 1;
       flex-shrink: 0;
+      transition: background 0.15s;
     }
+    .btn-add-url:hover { background: var(--border); }
     .url-chip {
       display: flex;
       align-items: center;
       gap: 8px;
-      background: var(--bg3);
-      border: 1px solid var(--border);
+      background: #e8f0fe;
+      border: 1px solid #c5d8fb;
       border-radius: 8px;
       padding: 8px 10px;
       margin-bottom: 6px;
       font-size: 13px;
     }
-    .url-chip a { color: var(--primary-light); text-decoration: none; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .url-chip-del { background: none; border: none; color: var(--error); cursor: pointer; font-size: 16px; flex-shrink: 0; }
+    .url-chip a { color: var(--primary); text-decoration: none; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .url-chip-del { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 16px; flex-shrink: 0; }
+    .url-chip-del:hover { color: var(--error); }
 
     /* ===== SAVE BUTTONS ===== */
     .save-bar {
@@ -395,34 +431,38 @@
       background: var(--primary);
       color: white;
       border: none;
-      border-radius: 12px;
+      border-radius: 8px;
       padding: 13px;
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.15s, box-shadow 0.15s;
+      box-shadow: 0 1px 4px rgba(26,115,232,0.3);
     }
-    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:hover { background: var(--primary-dark); box-shadow: 0 2px 8px rgba(26,115,232,0.4); }
     .btn-secondary {
       background: var(--bg3);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      color: var(--text2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
       padding: 13px 16px;
       font-size: 14px;
       cursor: pointer;
+      transition: background 0.15s;
     }
+    .btn-secondary:hover { background: var(--border); }
 
     /* ===== SETTINGS VIEW ===== */
     .settings-section {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 12px;
       overflow: hidden;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .settings-row {
-      padding: 14px 16px;
+      padding: 13px 16px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -430,26 +470,27 @@
       gap: 12px;
     }
     .settings-row:last-child { border-bottom: none; }
-    .settings-row label { font-size: 13px; color: var(--text2); white-space: nowrap; }
+    .settings-row label { font-size: 13px; color: var(--text2); white-space: nowrap; font-weight: 500; }
     .settings-row input {
       flex: 1;
       background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      border: 1px solid var(--border2);
+      border-radius: 7px;
       color: var(--text);
       padding: 7px 10px;
       font-size: 13px;
       outline: none;
       min-width: 0;
+      transition: border-color 0.2s;
     }
-    .settings-row input:focus { border-color: var(--primary-light); }
+    .settings-row input:focus { border-color: var(--primary); }
     .settings-label-only { font-size: 14px; color: var(--text); flex: 1; }
     .settings-value { font-size: 12px; color: var(--text2); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .status-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: var(--error);
+      background: var(--border2);
       flex-shrink: 0;
     }
     .status-dot.ok { background: var(--success); }
@@ -457,20 +498,22 @@
       background: var(--primary);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 7px;
       padding: 7px 14px;
       font-size: 13px;
       cursor: pointer;
       white-space: nowrap;
+      font-weight: 500;
     }
     .btn-disconnect {
       background: var(--bg3);
       color: var(--error);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      border: 1px solid var(--border2);
+      border-radius: 7px;
       padding: 7px 14px;
       font-size: 13px;
       cursor: pointer;
+      font-weight: 500;
     }
 
     /* ===== TOAST ===== */
@@ -478,90 +521,94 @@
       position: fixed;
       bottom: 90px;
       left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--bg3);
-      color: var(--text);
-      padding: 10px 18px;
-      border-radius: 20px;
-      font-size: 14px;
+      transform: translateX(-50%) translateY(12px);
+      background: #303134;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 500;
       z-index: 500;
       opacity: 0;
-      transition: opacity 0.3s, transform 0.3s;
-      border: 1px solid var(--border);
+      transition: opacity 0.25s, transform 0.25s;
       white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     #toast.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
-    #toast.success { border-color: var(--success); color: var(--success); }
-    #toast.error { border-color: var(--error); color: var(--error); }
+    #toast.success { background: var(--success); }
+    #toast.error { background: var(--error); }
 
     /* ===== EMPTY STATE ===== */
     .empty-state {
       text-align: center;
-      padding: 60px 20px;
+      padding: 64px 24px;
       color: var(--text2);
     }
-    .empty-state .emoji { font-size: 56px; margin-bottom: 16px; }
-    .empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
-    .empty-state p { font-size: 14px; line-height: 1.6; }
+    .empty-state .emoji { font-size: 52px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; line-height: 1.7; color: var(--text2); }
 
     /* ===== BADGE ===== */
     .tag {
       display: inline-block;
-      background: rgba(79,70,229,0.2);
-      color: var(--primary-light);
+      background: #e8f0fe;
+      color: var(--primary);
       border-radius: 4px;
       padding: 2px 7px;
-      font-size: 11px;
-      margin-top: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-left: 6px;
+      vertical-align: middle;
     }
 
     /* ===== DETAIL ACTIONS ===== */
     .action-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin: 16px 0;
+      gap: 8px;
+      margin: 4px 0 8px;
     }
     .action-btn {
-      background: var(--card);
+      background: var(--bg3);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
       padding: 14px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       cursor: pointer;
       font-size: 12px;
+      font-weight: 500;
       color: var(--text2);
-      transition: border-color 0.2s;
+      transition: background 0.15s, color 0.15s;
       text-decoration: none;
     }
-    .action-btn:hover { border-color: var(--primary-light); color: var(--text); }
-    .action-btn .icon { font-size: 24px; }
+    .action-btn:hover { background: #e8f0fe; color: var(--primary); border-color: #c5d8fb; }
+    .action-btn .icon { font-size: 22px; }
 
     /* ===== SETUP BANNER ===== */
     .setup-banner {
-      background: linear-gradient(135deg, rgba(79,70,229,0.2), rgba(245,158,11,0.1));
-      border: 1px solid rgba(79,70,229,0.4);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 16px;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
       display: flex;
       gap: 12px;
       align-items: flex-start;
     }
-    .setup-banner .icon { font-size: 22px; flex-shrink: 0; }
+    .setup-banner .icon { font-size: 20px; flex-shrink: 0; }
     .setup-banner-text { flex: 1; }
-    .setup-banner-text h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-    .setup-banner-text p { font-size: 12px; color: var(--text2); line-height: 1.5; }
+    .setup-banner-text h4 { font-size: 13px; font-weight: 600; margin-bottom: 3px; color: #5d4037; }
+    .setup-banner-text p { font-size: 12px; color: #795548; line-height: 1.5; }
     .btn-setup-link {
       display: inline-block;
-      margin-top: 8px;
-      color: var(--primary-light);
+      margin-top: 6px;
+      color: var(--primary);
       font-size: 13px;
       cursor: pointer;
       text-decoration: underline;
@@ -575,7 +622,7 @@
 
 <!-- ===== HEADER ===== -->
 <div class="header">
-  <h1>🍽️ 名刺管理</h1>
+  <h1>名刺<span>管理</span></h1>
   <button class="header-btn" onclick="showView('settings')" title="設定">⚙️</button>
 </div>
 
@@ -672,17 +719,19 @@
 
 <!-- Settings View -->
 <div class="view" id="settingsView">
-  <div style="margin-bottom:16px;">
-    <div style="font-size:20px; font-weight:700; margin-bottom:4px;">⚙️ 設定</div>
-    <div style="font-size:12px; color:var(--text2);">Google Workspace連携の設定をします</div>
+  <div style="margin-bottom:16px; padding-top:4px;">
+    <div style="font-size:18px; font-weight:700; margin-bottom:3px; color:var(--text);">設定</div>
+    <div style="font-size:13px; color:var(--text2);">Google Workspace連携の設定</div>
   </div>
 
   <div class="settings-section">
-    <div class="settings-row">
+    <div class="settings-row" style="flex-wrap:wrap; gap:10px;">
       <label>Google サインイン</label>
       <div id="authStatus" class="status-dot"></div>
       <div id="authStatusText" class="settings-value">未接続</div>
-      <button id="authBtn" class="btn-connect" onclick="handleAuthBtn()">接続</button>
+      <!-- GIS がここにボタンを描画する -->
+      <div id="googleSignInContainer"></div>
+      <button id="authDisconnectBtn" class="btn-disconnect" onclick="handleDisconnect()" style="display:none;">切断</button>
     </div>
     <div class="settings-row" id="authUserRow" style="display:none;">
       <span class="settings-label-only" id="authUserName">-</span>
@@ -766,9 +815,9 @@ let cameraStream = null;
 let googleAccessToken = null;
 
 const cfg = {
-  get visionKey() { return localStorage.getItem('cfg_visionKey') || ''; },
-  get clientId()  { return localStorage.getItem('cfg_clientId') || ''; },
-  get sheetId()   { return localStorage.getItem('cfg_sheetId') || ''; },
+  get visionKey() { return localStorage.getItem('cfg_visionKey') || 'AIzaSyBNKiZjx4_XxlsM7vqMV1phpftaCrWpz-I'; },
+  get clientId()  { return localStorage.getItem('cfg_clientId') || '166056290466-92r3a55spgrtq9hm4sv87atm3q7kdi7d.apps.googleusercontent.com'; },
+  get sheetId()   { return localStorage.getItem('cfg_sheetId') || '18dYYxLBmBjVfuB4um4kO5PccPkbxi2N6hZE7p0O3lKE'; },
   get autoContacts() { return localStorage.getItem('cfg_autoContacts') === 'true'; },
 };
 
@@ -780,37 +829,47 @@ document.addEventListener('DOMContentLoaded', () => {
   renderList();
   checkSetup();
 
-  // Google Identity Services callback
-  window.handleCredentialResponse = (response) => {
-    // Parse JWT to get user info
+  // GIS ready → ボタンを描画（ライブラリ読み込み前後どちらでも対応）
+  function setupGIS() {
+    google.accounts.id.initialize({
+      client_id: cfg.clientId,
+      callback: onGoogleSignedIn,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+    google.accounts.id.renderButton(
+      document.getElementById('googleSignInContainer'),
+      { theme: 'filled_blue', size: 'medium', text: 'signin_with', locale: 'ja', shape: 'rectangular' }
+    );
+  }
+
+  // GIS ライブラリ読み込み完了コールバック
+  window._gisReadyCallback = () => {
+    if (cfg.clientId && !googleAccessToken) setupGIS();
+  };
+  // 既に読み込まれていた場合（リロード等）
+  if (typeof google !== 'undefined' && google.accounts) {
+    if (cfg.clientId && !googleAccessToken) setupGIS();
+  }
+
+  // サインイン成功コールバック
+  function onGoogleSignedIn(response) {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
     googleAccessToken = response.credential;
-    document.getElementById('authUserName').textContent = `${payload.name}（${payload.email}）`;
-    document.getElementById('authUserRow').style.display = 'flex';
-    document.getElementById('authStatus').classList.add('ok');
-    document.getElementById('authStatusText').textContent = '接続済み';
-    document.getElementById('authBtn').textContent = '切断';
-    document.getElementById('authBtn').className = 'btn-disconnect';
-    document.getElementById('contactsStatus').classList.add('ok');
     localStorage.setItem('g_token', response.credential);
+    setAuthUI(true, `${payload.name}（${payload.email}）`);
     showToast('✅ Google アカウントに接続しました', 'success');
-  };
+  }
+  window.onGoogleSignedIn = onGoogleSignedIn;
 
-  // Restore token
+  // Restore token（前回のセッション）
   const saved = localStorage.getItem('g_token');
   if (saved) {
     try {
       const payload = JSON.parse(atob(saved.split('.')[1]));
-      const exp = payload.exp * 1000;
-      if (Date.now() < exp) {
+      if (Date.now() < payload.exp * 1000) {
         googleAccessToken = saved;
-        document.getElementById('authUserName').textContent = `${payload.name}（${payload.email}）`;
-        document.getElementById('authUserRow').style.display = 'flex';
-        document.getElementById('authStatus').classList.add('ok');
-        document.getElementById('authStatusText').textContent = '接続済み';
-        document.getElementById('authBtn').textContent = '切断';
-        document.getElementById('authBtn').className = 'btn-disconnect';
-        document.getElementById('contactsStatus').classList.add('ok');
+        setAuthUI(true, `${payload.name}（${payload.email}）`);
       }
     } catch(e) {}
   }
@@ -856,41 +915,28 @@ function checkSetup() {
 // =====================================================
 // AUTH
 // =====================================================
-function handleAuthBtn() {
-  if (googleAccessToken) {
-    // Disconnect
-    googleAccessToken = null;
-    localStorage.removeItem('g_token');
-    document.getElementById('authUserRow').style.display = 'none';
-    document.getElementById('authStatus').classList.remove('ok');
-    document.getElementById('authStatusText').textContent = '未接続';
-    document.getElementById('authBtn').textContent = '接続';
-    document.getElementById('authBtn').className = 'btn-connect';
-    document.getElementById('contactsStatus').classList.remove('ok');
-    showToast('Google アカウントを切断しました');
-  } else {
-    // Connect via Google Sign-In
-    if (!cfg.clientId) {
-      showToast('⚠️ 先にOAuthクライアントIDを設定してください', 'error');
-      return;
-    }
-    // Load GIS and prompt sign-in
-    initGoogleAuth();
-  }
+function setAuthUI(signedIn, displayName = '') {
+  document.getElementById('authStatus').classList.toggle('ok', signedIn);
+  document.getElementById('authStatusText').textContent = signedIn ? '接続済み' : '未接続';
+  document.getElementById('authUserRow').style.display = signedIn ? 'flex' : 'none';
+  document.getElementById('authUserName').textContent = displayName;
+  document.getElementById('googleSignInContainer').style.display = signedIn ? 'none' : '';
+  document.getElementById('authDisconnectBtn').style.display = signedIn ? '' : 'none';
+  document.getElementById('contactsStatus').classList.toggle('ok', signedIn);
 }
 
-function initGoogleAuth() {
-  if (typeof google === 'undefined') {
-    showToast('⚠️ Google認証ライブラリ読み込み中...', 'error');
-    return;
+function handleDisconnect() {
+  googleAccessToken = null;
+  localStorage.removeItem('g_token');
+  setAuthUI(false);
+  // ボタンを再描画
+  if (typeof google !== 'undefined' && google.accounts && cfg.clientId) {
+    google.accounts.id.renderButton(
+      document.getElementById('googleSignInContainer'),
+      { theme: 'filled_blue', size: 'medium', text: 'signin_with', locale: 'ja', shape: 'rectangular' }
+    );
   }
-  google.accounts.id.initialize({
-    client_id: cfg.clientId,
-    callback: handleCredentialResponse,
-    auto_select: false,
-    cancel_on_tap_outside: true,
-  });
-  google.accounts.id.prompt();
+  showToast('Google アカウントを切断しました');
 }
 
 // =====================================================
