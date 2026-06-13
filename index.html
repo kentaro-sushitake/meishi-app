@@ -721,70 +721,48 @@
 <div class="view" id="settingsView">
   <div style="margin-bottom:16px; padding-top:4px;">
     <div style="font-size:18px; font-weight:700; margin-bottom:3px; color:var(--text);">設定</div>
-    <div style="font-size:13px; color:var(--text2);">Google Workspace連携の設定</div>
+    <div style="font-size:13px; color:var(--text2);">Googleアカウントでサインインして使用できます</div>
   </div>
 
+  <!-- Google サインイン -->
   <div class="settings-section">
+    <div style="padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text2);">Googleアカウント</div>
     <div class="settings-row" style="flex-wrap:wrap; gap:10px;">
-      <label>Google サインイン</label>
       <div id="authStatus" class="status-dot"></div>
       <div id="authStatusText" class="settings-value">未接続</div>
-      <!-- GIS がここにボタンを描画する -->
       <div id="googleSignInContainer"></div>
-      <button id="authDisconnectBtn" class="btn-disconnect" onclick="handleDisconnect()" style="display:none;">切断</button>
+      <button id="authDisconnectBtn" class="btn-disconnect" onclick="handleDisconnect()" style="display:none;">サインアウト</button>
     </div>
     <div class="settings-row" id="authUserRow" style="display:none;">
-      <span class="settings-label-only" id="authUserName">-</span>
+      <span class="settings-label-only" style="color:var(--text2); font-size:13px;" id="authUserName">-</span>
     </div>
   </div>
 
-  <div class="settings-section">
-    <div style="padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text2);">Google Cloud API キー</div>
-    <div class="settings-row">
-      <label>Vision API キー</label>
-      <input type="password" id="cfg_visionKey" placeholder="AIza..." oninput="saveCfg()">
-    </div>
-    <div class="settings-row">
-      <label>OAuth クライアントID</label>
-      <input type="text" id="cfg_clientId" placeholder="xxx.apps.googleusercontent.com" oninput="saveCfg()">
-    </div>
-  </div>
-
-  <div class="settings-section">
-    <div style="padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text2);">Google Sheets（データ保存）</div>
-    <div class="settings-row">
-      <label>スプレッドシートID</label>
-      <input type="text" id="cfg_sheetId" placeholder="1BxiMVs0..." oninput="saveCfg()">
-    </div>
-    <div class="settings-row">
-      <span class="settings-label-only" style="font-size:12px; color:var(--text2);">※ URLの /d/ 〜 /edit の間の文字列</span>
-    </div>
-    <div class="settings-row" style="justify-content:center;">
-      <button class="btn-connect" onclick="initSheet()" style="width:100%;">Sheetsを初期化・確認</button>
-    </div>
-  </div>
-
+  <!-- Google Contacts -->
   <div class="settings-section">
     <div style="padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text2);">Google Contacts</div>
     <div class="settings-row">
       <div id="contactsStatus" class="status-dot"></div>
-      <span class="settings-label-only">自動連絡先追加</span>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+      <span class="settings-label-only">保存時に連絡先へ自動追加</span>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer; margin-left:auto;">
         <input type="checkbox" id="cfg_autoContacts" onchange="saveCfg()">
         <span style="font-size:13px;">有効</span>
       </label>
     </div>
   </div>
 
-  <div style="padding:12px 0; font-size:12px; color:var(--text2); line-height:1.7;">
-    <strong>設定手順：</strong><br>
-    1. <a href="https://console.cloud.google.com/" target="_blank" style="color:var(--primary-light);">Google Cloud Console</a> でプロジェクト作成<br>
-    2. Cloud Vision API・Sheets API・People API を有効化<br>
-    3. 認証情報 → APIキー（Vision用）を作成<br>
-    4. OAuth 2.0 クライアントIDを作成（Webアプリ）<br>
-    5. スプレッドシートを新規作成してIDをコピー<br>
-    詳しくは同梱の <strong>SETUP.md</strong> を参照してください
+  <!-- Google Sheets 確認 -->
+  <div class="settings-section">
+    <div style="padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text2);">Google Sheets</div>
+    <div class="settings-row" style="justify-content:center;">
+      <button class="btn-connect" onclick="initSheet()" style="width:100%;">📊 Sheetsの接続を確認</button>
+    </div>
   </div>
+
+  <!-- 非表示の設定フィールド（saveCfg用・UIには出さない） -->
+  <input type="hidden" id="cfg_visionKey">
+  <input type="hidden" id="cfg_clientId">
+  <input type="hidden" id="cfg_sheetId">
 </div>
 
 <!-- ===== BOTTOM NAV ===== -->
@@ -804,6 +782,26 @@
 </nav>
 
 <script>
+// =====================================================
+// ★ アクセス許可リスト ★
+// 使用を許可するGoogleアカウントのメールアドレスを追加してください
+// ドメイン指定も可能例: '@restaurant.co.jp'
+// =====================================================
+const ALLOWED_EMAILS = [
+  'sakiko-admin@sushitaketokyo.com',
+  'takeshi-admin@sushitaketokyo.com',
+  'kentaro-admin@sushitaketokyo.com',
+  'wagokorodentatsunin@gmail.com',
+  // 追加する場合はここに 'メールアドレス', の形式で追記
+];
+
+function isAllowedEmail(email) {
+  if (ALLOWED_EMAILS.length === 0) return true; // リストが空なら全員許可
+  return ALLOWED_EMAILS.some(rule =>
+    rule.startsWith('@') ? email.endsWith(rule) : email === rule
+  );
+}
+
 // =====================================================
 // STATE & CONFIG
 // =====================================================
@@ -855,10 +853,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // サインイン成功コールバック
   function onGoogleSignedIn(response) {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    // アクセス許可チェック
+    if (!isAllowedEmail(payload.email)) {
+      showToast('⛔ このアカウントは許可されていません: ' + payload.email, 'error');
+      google.accounts.id.disableAutoSelect();
+      return;
+    }
     googleAccessToken = response.credential;
     localStorage.setItem('g_token', response.credential);
     setAuthUI(true, `${payload.name}（${payload.email}）`);
-    showToast('✅ Google アカウントに接続しました', 'success');
+    showToast('✅ サインインしました', 'success');
   }
   window.onGoogleSignedIn = onGoogleSignedIn;
 
@@ -867,7 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (saved) {
     try {
       const payload = JSON.parse(atob(saved.split('.')[1]));
-      if (Date.now() < payload.exp * 1000) {
+      if (Date.now() < payload.exp * 1000 && isAllowedEmail(payload.email)) {
         googleAccessToken = saved;
         setAuthUI(true, `${payload.name}（${payload.email}）`);
       }
@@ -897,9 +901,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // CONFIG UI
 // =====================================================
 function loadCfgToUI() {
-  document.getElementById('cfg_visionKey').value = localStorage.getItem('cfg_visionKey') || '';
-  document.getElementById('cfg_clientId').value = localStorage.getItem('cfg_clientId') || '';
-  document.getElementById('cfg_sheetId').value = localStorage.getItem('cfg_sheetId') || '';
+  // デフォルト値を含む現在の値を表示（空欄にならないように）
+  document.getElementById('cfg_visionKey').value = cfg.visionKey;
+  document.getElementById('cfg_clientId').value = cfg.clientId;
+  document.getElementById('cfg_sheetId').value = cfg.sheetId;
   document.getElementById('cfg_autoContacts').checked = cfg.autoContacts;
 }
 
@@ -1244,8 +1249,10 @@ function renderUrlList() {
 // SAVE CONTACT
 // =====================================================
 async function saveContact() {
+  hideProcessing(); // 念のため処理中オーバーレイを必ず解除
   const name = document.getElementById('f_name').value.trim();
-  if (!name) { showToast('⚠️ お名前は必須です', 'error'); return; }
+  const company = document.getElementById('f_company').value.trim();
+  if (!name && !company) { showToast('⚠️ お名前または会社名を入力してください', 'error'); return; }
 
   const data = {
     id: currentContactId || Date.now().toString(),
@@ -1499,6 +1506,7 @@ function showView(name) {
   } else if (name === 'settings') {
     document.getElementById('settingsView').classList.add('active');
     document.getElementById('nav-settings').classList.add('active');
+    loadCfgToUI(); // 設定画面を開くたびに現在値（デフォルト含む）を表示
   }
 }
 
